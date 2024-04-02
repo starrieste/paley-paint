@@ -11,19 +11,23 @@ DIR = [(0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
 def dist(a, b):
         return ((a[0] - b[0])**2 + (a[1] - b[1])**2)**(1/2)
 
+filetypes = [('All files', '*.*'), ('PNG files', '*.png'), ('JPEG files', '*.jpg')]
 def choose_file(save=False):
-        filetypes = [('PNG files', '*.png'), ('JPEG files', '*.jpg'), ('All files', '*.*')]
         if save:
-                return filedialog.asksaveasfile(filetypes=filetypes, defaultextension="*.png").name
-        return filedialog.askopenfilename(filetypes=filetypes, defaultextension="*.png")
+                return filedialog.asksaveasfile(filetypes=filetypes)
+        return filedialog.askopenfilename(filetypes=filetypes)
 
 class Canvas:
-        def __init__(self, WS, size):
+        def __init__(self, program, WS, size):
+                self.program = program
+
                 self.width = size[0]
                 self.height = size[1]
                 self.image = pygame.Surface((self.width, self.height))
                 self.image.fill((255, 255, 255))
-                self.pos = [WS[0]/2 - self.width/2, WS[1]/2 - self.height/2]
+                if (self.width > self.height): self.scale = (self.program.WS[0] * 0.7) / self.width
+                else : self.scale = (self.program.WS[1] * 0.7) / self.height
+                self.pos = [WS[0]/2 - self.width*self.scale/2, WS[1]/2 - self.height*self.scale/2]
 
                 self.panning = False
                 self.pan_relation = [0, 0]
@@ -43,7 +47,6 @@ class Canvas:
                 pygame.draw.circle(self.brush_img, self.brush_color, (self.brush_size, self.brush_size), self.brush_size)
 
                 self.save_path = None
-                self.scale = 1
 
         def save(self, save_as=False):
                 if self.save_path != None and not save_as and os.path.isfile(self.save_path):
@@ -51,6 +54,7 @@ class Canvas:
                 else:
                         filepath = choose_file(True)
                         if not filepath: return
+                        filepath = filepath.name
                         pygame.image.save(self.image, filepath)
                         self.save_path = filepath
         def load(self):
@@ -60,7 +64,9 @@ class Canvas:
                 load_img = pygame.image.load(filepath).convert()
 
                 self.width, self.height = load_img.get_size()
-                self.pos = [self.program.WS[0]/2 - self.width/2, self.program.WS[1]/2 - self.height/2]
+                if (self.width > self.height): self.scale = (self.program.WS[0] * 0.7) / self.width
+                else : self.scale = (self.program.WS[1] * 0.7) / self.height
+                self.pos = [self.program.WS[0]/2 - self.width*self.scale/2, self.program.WS[1]/2 - self.height*self.scale/2]
                 self.image = pygame.Surface(load_img.get_size())
                 self.image.blit(load_img, (0, 0))
 
@@ -97,6 +103,8 @@ class Canvas:
                                 self.last_redo_tick = now
 
         def drawline(self, bimg, start_pos, end_pos):
+                start_pos = list(map(int, start_pos))
+                end_pos = list(map(int, end_pos))
                 x, y = start_pos
                 self.image.blit(bimg, (end_pos[0] - bimg.get_width()/2, end_pos[1] - bimg.get_height()/2))
                 self.image.blit(bimg, (x - bimg.get_width()/2, y - bimg.get_height()/2))
@@ -132,11 +140,11 @@ class Canvas:
 
 class Atheris:
         def __init__(self):
-                self.WS = (1200, 800)
+                self.WS = (1600, 900)
                 self.display = pygame.display.set_mode(self.WS, pygame.RESIZABLE, depth=32)
                 pygame.display.set_caption("Atheris Paint")
                 self.clock = pygame.time.Clock()
-                self.canvas = Canvas(self.WS, (800, 600))
+                self.canvas = Canvas(self, self.WS, (1000, 1200))
 
                 root = tkinter.Tk()
                 root.withdraw()
