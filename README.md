@@ -1,4 +1,6 @@
-Hi! This is my Paint Project Submission for ICS3U.
+# Paley Paint
+
+A paint program made with pygame!
 
 The fonts folder is pretty much useless, I just used to make the text for the guide page
 in aseprite. it is not used at all in the code.
